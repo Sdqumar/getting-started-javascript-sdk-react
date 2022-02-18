@@ -1,53 +1,41 @@
-import { Component } from 'react';
-import axios from 'axios';
-import Smartcar from '@smartcar/auth';
+import axios from "axios";
+import Smartcar from "@smartcar/auth";
 
-import Connect from './components/Connect';
-import Vehicle from './components/Vehicle';
+import Connect from "./components/Connect";
+import Vehicle from "./components/Vehicle";
+import { useState } from "react";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
+const App = () => {
+  const [vehicle, setVehicle] = useState({});
 
-    this.state = {
-      vehicle: {},
-    };
-
-    this.authorize = this.authorize.bind(this);
-
-    this.onComplete = this.onComplete.bind(this);
-
-    this.smartcar = new Smartcar({
-      clientId: process.env.REACT_APP_CLIENT_ID,
-      redirectUri: process.env.REACT_APP_REDIRECT_URI,
-      scope: ['read_vehicle_info'],
-      testMode: true,
-      onComplete: this.onComplete,
-    });
-  }
-
-  onComplete(err, code, state) {
+  function onComplete(err, code, state) {
     return axios
       .get(`${process.env.REACT_APP_SERVER}/exchange?code=${code}`)
-      .then(_ => {
+      .then((_) => {
         return axios.get(`${process.env.REACT_APP_SERVER}/vehicle`);
       })
-      .then(res => {
-        this.setState({ vehicle: res.data });
+      .then((res) => {
+        setVehicle({ vehicle: res.data });
       });
   }
 
-  authorize() {
-    this.smartcar.openDialog({ forcePrompt: true });
+  const smartcar = new Smartcar({
+    clientId: "a9be171e-3e4e-4b83-bcad-3ab9df9e1474",
+    redirectUri:
+      " https://javascript-sdk.smartcar.com/redirect-2.0.0?app_origin=http://localhost:3000",
+    scope: ["read_vehicle_info"],
+    testMode: true,
+    onComplete: onComplete(),
+  });
+  function authorize() {
+    smartcar.openDialog({ forcePrompt: true });
   }
 
-  render() {
-    return Object.keys(this.state.vehicle).length !== 0 ? (
-      <Vehicle info={this.state.vehicle} />
-    ) : (
-      <Connect onClick={this.authorize} />
-    );
-  }
-}
+  return Object.keys(vehicle).length !== 0 ? (
+    <Vehicle info={vehicle} />
+  ) : (
+    <Connect onClick={authorize} />
+  );
+};
 
 export default App;
